@@ -1,0 +1,58 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Getting Started: Serving Web Content</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta http-equiv="refresh" content="5">
+<!--    <link href="../static/css/index.css"-->
+<!--          th:href="@{css/index.css}" rel="stylesheet" media="screen" />-->
+    <style>
+        table, th, td {
+          border: 1px solid black;
+          border-collapse: collapse;
+        }
+        th, td {
+          padding-top: 10px;
+          padding-bottom: 20px;
+          padding-left: 30px;
+          padding-right: 40px;
+        }
+    </style>
+</head>
+<body>
+<p>Get your greeting <a href="/greeting">here</a></p>
+<h3>Task List</h3>
+<form action="https://google.com">
+    <input type="submit" value="My tasks" />
+</form>
+<div th:if="${not #lists.isEmpty(tasks)}">
+    <table style="width:100%">
+        <tr>
+            <th>Ticket</th>
+            <th>Title</th>
+            <th>Description</th>
+            <th>Status</th>
+            <th>Last Modified</th>
+            <th>Created Date</th>
+            <th>Actions</th>
+        </tr>
+        <tr th:each="task : ${tasks}">
+            <td th:text="${task.ticketNumber}"></td>
+            <td th:text="${task.title}"></td>
+            <td th:text="${task.description}"></td>
+            <td th:text="${task.status}"></td>
+            <td th:text="${task.lastModified}"></td>
+            <td th:text="${task.createdDate}"></td>
+            <td><a th:href="@{/task-manage/{ticketNumber}(ticketNumber=${task.ticketNumber})}"> Details </a>
+                <p> | </p>
+                <a th:href="@{/task-manage/delete/{ticketNumber}(ticketNumber=${task.ticketNumber})}"> Remove</a>
+            </td>
+        </tr>
+    </table>
+</div>
+<form action="/task-manage/createForm">
+    <input type="submit" value="Add tasks" />
+</form>
+
+</body>
+</html>
