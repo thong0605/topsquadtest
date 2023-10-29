@@ -3,8 +3,10 @@ package org.service.topsquad.service.impl;
 import java.util.Date;
 import java.util.List;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.tomcat.util.codec.binary.Base64;
 import org.service.topsquad.exceptionhandler.ResourceNotFoundException;
 import org.service.topsquad.exceptionhandler.ResourceValidateException;
+import org.service.topsquad.model.Account;
 import org.service.topsquad.model.UserEntity;
 import org.service.topsquad.model.UserModel;
 import org.service.topsquad.repository.UserRepository;
@@ -19,8 +21,8 @@ public class UserServiceImpl implements UserService {
 
 
     @Override
-    public List<UserEntity> findAll() {
-        return repository.findAll();
+    public List<UserEntity> findAllUser() {
+        return repository.findAllByRole("USER");
     }
 
     @Override
@@ -46,21 +48,33 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UserEntity update(final UserModel model) throws ResourceNotFoundException {
-        UserEntity updateUser = repository.findByUserName(model.getUserName())
-            .orElseThrow(() -> new ResourceNotFoundException("User name: " + model.getUserName() + " not found"));
+    public boolean changePassword(final Account model) throws ResourceNotFoundException, ResourceValidateException {
+        if(StringUtils.isBlank(model.getPassword()) || StringUtils.isBlank(model.getNewPassword()))
+            throw new ResourceValidateException("Input validation: Passwords cannot be blanked.");
+        if(StringUtils.equals(model.getPassword(), model.getNewPassword()))
+            throw new ResourceValidateException("Input validation: Passwords should be different to the one other.");
 
-        if(StringUtils.isNotBlank(model.getPassword())) updateUser.setPassword(model.getPassword());
+        UserEntity updateUser = repository.findByUserName(model.getUserName())
+            .orElseThrow(() -> new ResourceNotFoundException("Resource validation: User name: " + model.getUserName() + " not found"));
+
+        String currentPw = updateUser.getPassword();
+        String newEncodedPw = new Base64().encodeAsString(model.getNewPassword().getBytes());
+
+        if(StringUtils.equals(currentPw, newEncodedPw))
+            throw new ResourceValidateException("Resource validation: Passwords should be different to the one other.");
+
+        updateUser.setPassword(newEncodedPw);
         updateUser.setLastModified(new Date());
 
-        return repository.save(updateUser);
+        repository.save(updateUser);
+        return repository.isPasswordMatch(newEncodedPw);
     }
 
     @Override
-    public boolean deactivateByUserName(final String userName) throws ResourceNotFoundException {
+    public boolean updateUserStatus(final String userName, final String status) throws ResourceNotFoundException {
         UserEntity user = repository.findByUserName(userName)
                 .orElseThrow(() -> new ResourceNotFoundException("User: " + userName + " not found"));
-        user.setStatus("DEACTIVATE");
+        user.setStatus(status);
         repository.save(user);
         return repository.isUserExistsByStatus(userName, "DEACTIVATE");
     }

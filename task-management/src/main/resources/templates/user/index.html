@@ -25,7 +25,7 @@
 <form action="https://google.com">
     <input type="submit" value="My tasks" />
 </form>
-<div th:if="${not #lists.isEmpty(tasks)}">
+<div th:if="${not #lists.isEmpty(user.tasks)}">
     <table style="width:100%">
         <tr>
             <th>Ticket</th>
@@ -37,7 +37,7 @@
             <th>Actions</th>
             <th>Assignee</th>
         </tr>
-        <tr th:each="task : ${tasks}">
+        <tr th:each="task : ${user.tasks}">
             <td th:text="${task.ticketNumber}"></td>
             <td th:text="${task.title}"></td>
             <td th:text="${task.description}"></td>

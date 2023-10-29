@@ -1,4 +1,4 @@
-package org.service.topsquad.kafka;
+package org.service.topsquad.config.kafka;
 
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringSerializer;
@@ -19,6 +19,7 @@ public class KafkaProducerConfig {
     @Value(value = "${spring.kafka.producer.bootstrap-servers}")
     private String bootstrapAddress;
 
+    // Kafka Producer for Email Event
     @Bean
     public ProducerFactory<String, TaskInfosEmail> producerFactory() {
     Map<String, Object> configProps = new HashMap<>();

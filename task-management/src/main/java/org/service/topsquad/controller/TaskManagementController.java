@@ -2,15 +2,16 @@ package org.service.topsquad.controller;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.tomcat.util.json.JSONParser;
-import org.json.JSONArray;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.kafka.clients.producer.ProducerRecord;
 import org.service.topsquad.constants.Constants;
-import org.service.topsquad.model.Person;
-import org.service.topsquad.model.Response;
+import org.service.topsquad.model.Account;
 import org.service.topsquad.model.TaskAssignModel;
 import org.service.topsquad.model.TaskModel;
 import org.service.topsquad.model.TaskStatus;
@@ -21,22 +22,17 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.kafka.core.KafkaTemplate;
-import org.springframework.kafka.support.KafkaHeaders;
-import org.springframework.messaging.Message;
-import org.springframework.messaging.support.MessageBuilder;
+import org.springframework.kafka.requestreply.ReplyingKafkaTemplate;
+import org.springframework.kafka.requestreply.RequestReplyFuture;
+import org.springframework.kafka.support.SendResult;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.ui.ModelMap;
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.client.RestTemplate;
 
@@ -45,6 +41,8 @@ import org.springframework.web.client.RestTemplate;
 public class TaskManagementController {
     @Autowired
     private KafkaTemplate<String, TaskModel> kafkaTemplate;
+    @Autowired
+    public ReplyingKafkaTemplate<String, Object, Object> replyKafkaTemplate;
     private static final String TASK_SERVICE_URL = "http://localhost:8081/api/v1";
 
     // Display all tasks
@@ -171,5 +169,20 @@ public class TaskManagementController {
         StringBuilder redirect = new StringBuilder("redirect:/task-manage/").append(taskAssignModel.getTicketNumber());
         return responseEntity.getStatusCode() == HttpStatus.OK
                 ? redirect.toString() : "error/500";
+    }
+
+    // TESTTTT
+    @PostMapping(value="/sum")
+    public @ResponseBody Object sum(@RequestBody Account request) throws InterruptedException, ExecutionException, TimeoutException {
+        ProducerRecord<String, Object> record = new ProducerRecord<>("test_request_topic", request);
+        RequestReplyFuture<String, Object, Object> replyFuture = replyKafkaTemplate.sendAndReceive(record);
+
+        SendResult<String, Object> sendResult = replyFuture.getSendFuture().get(10, TimeUnit.SECONDS);
+        System.out.println("Sent ok: " + sendResult.getRecordMetadata());
+
+        ConsumerRecord<String, Object> consumerRecord = replyFuture.get(10, TimeUnit.SECONDS);
+        System.out.println("Return value: " + consumerRecord.value());
+
+        return consumerRecord.value();
     }
 }

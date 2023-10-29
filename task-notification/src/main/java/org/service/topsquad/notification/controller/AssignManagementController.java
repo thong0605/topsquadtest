@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping(value = "/task")
 public class AssignManagementController {
 
+    // TEST
     @Autowired
     private JavaMailSender mailSender;
 

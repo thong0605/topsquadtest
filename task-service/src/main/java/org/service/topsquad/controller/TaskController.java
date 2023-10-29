@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.service.topsquad.exceptionhandler.ResourceNotFoundException;
 import org.service.topsquad.exceptionhandler.ResourceValidateException;
+import org.service.topsquad.model.Account;
 import org.service.topsquad.model.Response;
 import org.service.topsquad.model.TaskAssignModel;
 import org.service.topsquad.model.TaskEntity;
@@ -17,6 +18,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -37,6 +39,13 @@ public class TaskController {
 
     @Autowired
     private KafkaTemplate<String, TaskInfosEmail> kafkaTemplate;
+
+    @KafkaListener(topics = "test_request_topic")
+    @SendTo
+    public Object listen(Account request) {
+        request.setNewPassword(request.getUserName() + request.getPassword());
+        return request;
+    }
 
     @KafkaListener(topics = "task_create_topic",
             groupId = "${spring.kafka.consumer.group-id}")
@@ -60,19 +69,6 @@ public class TaskController {
         }
     }
 
-//    @KafkaListener(topics = "thongtestproducer", groupId = "group_id")
-//    public void consume(String message){
-//        LOGGER.info(String.format("Message received -> %s", message));
-//    }
-
-//    @Autowired
-//    private KafkaTemplate<String, Response> kafkaTemplate;
-//    private static final String TOPIC = "thongtestproducer";
-//    @GetMapping("/test-kafka")
-//    public String kafka() {
-//        kafkaTemplate.send(TOPIC, new Response("Hello"));
-//        return "Kafka Published";
-//    }
     // OK
     @GetMapping("/tasks")
     public List<TaskEntity> findAll() {
@@ -124,15 +120,14 @@ public class TaskController {
         }
     }
 
-    @DeleteMapping("/tasks/{ticketNumber}")
+    @DeleteMapping("/admin/tasks/{ticketNumber}")
     public ResponseEntity<Response> delete(@PathVariable(value = "ticketNumber") final String ticketNumber)
             throws ResourceNotFoundException {
         String msg = service.deleteByTicketNumber(ticketNumber) ? "Deleted" : "Not Deleted";
         return ResponseEntity.ok().body(new Response(msg));
     }
 
-
-    @DeleteMapping("/tasks")
+    @DeleteMapping("/admin/tasks")
     public ResponseEntity<Response> deleteAll() {
     return service.deleteAll()
         ? ResponseEntity.status(HttpStatus.NO_CONTENT).body(new Response("Tasks deleted."))

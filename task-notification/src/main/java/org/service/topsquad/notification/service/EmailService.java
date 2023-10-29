@@ -22,8 +22,7 @@ public class EmailService {
     @Autowired
     private JavaMailSender mailSender;
 
-    @KafkaListener(topics = "${spring.kafka.topic.name}",
-            groupId = "${spring.kafka.consumer.group-id}")
+    @KafkaListener(topics = "task_notification_topic", groupId = "email")
     public void consume(String event){
         LOGGER.info(String.format("Task notification event in email service => %s", event));
         try {
