@@ -1,0 +1,47 @@
+This project has 4 modules:
+- DatabaseH2
+- Task Management
+- Task Service
+- Task Notification
+
+1. DatabaseH2
+- It’s a simple db with TASK and USERTASK relational tables
+- Application Port 8080
+- TCP Port 9090 ( for external connections )
+- H2 Console enabled
+- Dockerising exposed with port 8080
+
+2. Task Management
+- Spring Boot MVC Application
+- Application Port 8082
+- Kafka Standard Template and Request-Reply implemented with TASK-SERVICE
+- Can publish msg using Kafka Standard Template with ( CREATE, UPDATE function DONE )
+- ( READ , DELETE are using standard HTTP Request RestTemplate to achieve )
+- ReplyKafkaTemplate on test-communication succeeded with TASK-SERVICE
+- ReplyKafkaTemplate on real-communication did not succeed - timeout exception( due to some missing configurations )
+- Task CRUD integrations OK
+- User CRUD integrations 50% OK
+- Spring Security NOT implemented
+- Spring CLOUD Stream NOT implemented
+- Dockerising exposed with port 8082
+
+3. Task Service
+- Spring Boot Application
+- Application Port 8081
+- Kafka Listener and Request-Reply Kafka implemented with TASK-MANAGEMENT
+- Can publish msg using Kafka Standard Template with TASK-NOTIFICATION
+- Can consume msg using Kafka Standard Consumer with ( CREATE, UPDATE function DONE )
+- ReplyKafkaTemplate on test-communication succeeded with TASK-MANAGEMENT
+- ReplyKafkaTemplate on real-communication did not succeed - timeout exception ( due to some missing configurations )
+- Task CRUD integrations OK
+- User CRUD integrations 50% OK
+- Spring Security implemented for TASK
+- Spring CLOUD Stream NOT implemented
+- Dockerising exposed with port 8081
+
+4. Task Notification
+- Spring Boot Application
+- Application Port 8083
+- Kafka Listener implemented with TASK-SERVICE OK
+- Send Email function
+- Dockerising exposed with port 8083
