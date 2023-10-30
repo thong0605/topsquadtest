@@ -1,0 +1,33 @@
+@startuml
+actor       Client       as cli
+participant TaskManager as tm
+participant Kafka as kf
+participant TaskService as ts
+database    DatabaseH2    as db
+participant TaskNotification as tn
+
+cli -> tm : Request CRUD
+tm -> kf : Publish msg
+kf -> ts : Listen and consume msg
+
+ts -> db : Send request
+db --> ts : Return value
+ts --> kf : Reply record
+kf --> tm : Send record
+tm --> cli : Receive record and display
+
+cli -> tm : Request Assign task
+tm -> kf : Publish msg
+kf -> ts : Listen and consume msg
+
+ts -> db : Send request
+db --> ts : Return value
+ts -> kf : Publish email msg
+kf -> tn : Listen and consume msg
+tn --> tn : Execute Sending email
+ts --> kf : Reply record
+kf --> tm : Send record
+tm --> cli : Receive record and display
+
+
+@enduml
